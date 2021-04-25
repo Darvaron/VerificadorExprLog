@@ -32,6 +32,13 @@ class Verifier:
         self.expr_list.append(part)
 
     def evaluate_atomic(self, atomic_expr):
+        '''
+        Evalua una expresión atómica
+        Args:
+            atomic_expr -- String que contiene una expresión lógica atómica
+        Returns:
+            val -- Bool que contiene la validez de dicha expresión
+        '''
         v = re.search(r'^\(((not )?([a-zA-Z1])( and | or | then | iff )(not )?([a-zA-Z1]))\)$',
                       atomic_expr)
 
@@ -40,7 +47,7 @@ class Verifier:
         else:
             val = False
 
-        print('La expresión: {} es: {}'.format(atomic_expr, val))
+        #print('La expresión: {} es: {}'.format(atomic_expr, val))
         return val
 
     def evaluate(self, expr):
@@ -50,13 +57,15 @@ class Verifier:
             expr -- python list que contiene una lista de carácteres
         Returns:
             valid -- bool que contiene la validez de la expresión
-            chars -- listo que contiene tuplas de char - tipo
+            chars -- python list que contiene los términos encontrados
+            new_var -- python list que contiene las variables usadas
+            new_cond -- python list que contiene los condicionales usados
         '''
         count_par = Counter(expr)
-        if not '(' in expr or not ')' in expr or '1' in expr:
-            return False, ['No es una entrada válida']
+        if not '(' in expr or not ')' in expr or '1' in expr or '[' in expr or ']' in expr:
+            return False, None, None, None
         if count_par['('] != count_par[')']:
-            return False, ['No es una entrada válida']
+            return False, None, None, None
         valid = True
         chars = []
         to_pop = []
@@ -93,6 +102,33 @@ class Verifier:
         #print('Las expresiones finales son {}:'.format(self.expr_list))
 
         chars = expr.split(' ')
-        chars = list(set(chars))
+        new_chars = []
+     
+        for posicion in chars: #Mostrando componentes de la expresión lógica
+            if not ')' in posicion and not '(' in posicion:
+                chars_2 = posicion
+                new_chars.append(chars_2)
+            if '(' in posicion:
+                chars_2=posicion.replace("(","")
+                new_chars.append(chars_2)
+            if ')' in posicion:
+                chars_2=posicion.replace(")","")
+                new_chars.append(chars_2)
+            
+        #print(new_chars) 
+        chars = set(new_chars)
+
+        new_var=[]
+        new_cond=[]
+        for posicion in chars:
+            if posicion == 'and'  or posicion == 'or' or posicion == 'then' or posicion == 'iff':
+                chars_2 = posicion
+                new_cond.append(chars_2)
+            else:
+                chars_2 = posicion
+                new_var.append(chars_2)
+
+        #print(new_var)
+        #print(new_cond)
         
-        return valid, chars
+        return valid, chars, new_var, new_cond
